@@ -56,8 +56,8 @@ jobs:
 
       - name: Create PR with updated packages
         run: |
-          COMMIT_MESSAGE="release(${{ github.event.inputs.packageName }}-v${{ steps.packages_update.outputs.new_version}}')"
+          COMMIT_MESSAGE="release(${{ github.event.inputs.packageName }}-v${{ steps.packages_update.outputs.new_version}})"
           git add .
-          git commit -m "$COMMIT_MESSAGE"
+          git commit -m $COMMIT_MESSAGE
           gh pr create -B main --title 'release(${{ github.event.inputs.packageName }}-v${{ steps.packages_update.outputs.new_version}}' \
-          --body Update '${{ github.event.inputs.packageName }} version from ${{ steps.packages_update.outputs.old_version }} to ${{ steps.packages_update.outputs.new_version }}'
+          --body 'Update ${{ github.event.inputs.packageName }} version from ${{ steps.packages_update.outputs.old_version }} to ${{ steps.packages_update.outputs.new_version }}'
