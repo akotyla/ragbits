@@ -61,3 +61,5 @@ jobs:
           git commit -m $COMMIT_MESSAGE
           gh pr create -B main --title 'release(${{ github.event.inputs.packageName }}-v${{ steps.packages_update.outputs.new_version}}' \
           --body 'Update ${{ github.event.inputs.packageName }} version from ${{ steps.packages_update.outputs.old_version }} to ${{ steps.packages_update.outputs.new_version }}'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
