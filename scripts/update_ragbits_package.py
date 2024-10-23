@@ -220,7 +220,7 @@ def run(pkg_name: Optional[str] = typer.Argument(None), update_type: Optional[st
             version, new_version = _update_pkg_version(pkg_name, update_type=casted_update_type)
             casted_update_type = _check_update_type(version, new_version)
 
-            for pkg in [pkg for pkg in packages if pkg != "ragbits-core"]:
+            for pkg in sorted([pkg for pkg in packages if pkg != "ragbits-core"], reverse=True):
                 pkg_pyproject = tomlkit.parse((PACKAGES_DIR / pkg / "pyproject.toml").read_text())
                 pkg_pyproject["project"]["dependencies"] = [
                     dep for dep in pkg_pyproject["project"]["dependencies"] if "ragbits-core" not in dep
