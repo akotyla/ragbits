@@ -45,7 +45,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b release-${{ github.event.inputs.packageName }}-$(date +%Y-%m-%d)
+          git checkout -b release/${{ github.event.inputs.packageName }}-$(date +%Y-%m-%d)
 
       - name: Update packages
         id: packages_update
@@ -56,11 +56,11 @@ jobs:
 
       - name: Create PR with updated packages
         run: |
-          COMMIT_MESSAGE="release(${{ github.event.inputs.packageName }}-v${{ steps.packages_update.outputs.new_version}})"
+          COMMIT_MESSAGE="release(${{ github.event.inputs.packageName }}): update to v${{ steps.packages_update.outputs.new_version }}"
           git add .
           git commit -m $COMMIT_MESSAGE
           git push -u origin HEAD
-          gh pr create -B main --title 'release(${{ github.event.inputs.packageName }}-v${{ steps.packages_update.outputs.new_version}}' \
+          gh pr create -B main --title $COMMIT_MESSAGE \
           --body 'Update ${{ github.event.inputs.packageName }} version from ${{ steps.packages_update.outputs.old_version }} to ${{ steps.packages_update.outputs.new_version }}'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

@@ -12,7 +12,7 @@
 #
 #   uv run scripts/update_ragbits_package.py
 #
-
+import re
 from copy import deepcopy
 from datetime import datetime
 from enum import Enum
@@ -100,19 +100,13 @@ def _update_pkg_version(
     if pkg_name != "ragbits":
         _sync_ragbits_deps(pkg_name, version, new_version, sync_ragbits_version)
 
-    changelog_path = PACKAGES_DIR / pkg_name / "CHANGELOG.md"
-    changelog_content = changelog_path.read_text()
-    changelog_content = changelog_content.replace(
-        "## Unreleased", f"## Unreleased\n\n## {new_version} ({datetime.today().strftime('%Y-%m-%d')})"
-    )
-    changelog_path.write_text(changelog_content)
-
+    _create_changelog_release(pkg_name=pkg_name, new_version=new_version)
 
     return version, new_version
 
 
 def _sync_ragbits_deps(pkg_name: str, pkg_version: str, pkg_new_version: str, update_version: bool = True):
-    ragbits_pkg_project = tomlkit.parse((PACKAGES_DIR / "ragbits/pyproject.toml").read_text())
+    ragbits_pkg_project = tomlkit.parse((PACKAGES_DIR / "ragbits" / "pyproject.toml").read_text())
     ragbits_deps: list[str] = [dep.split("==")[0] for dep in ragbits_pkg_project["project"]["dependencies"]]
 
     update_type = _check_update_type(pkg_version, pkg_new_version)
@@ -121,6 +115,7 @@ def _sync_ragbits_deps(pkg_name: str, pkg_version: str, pkg_new_version: str, up
         idx = ragbits_pkg_project["project"]["dependencies"].index(f"{pkg_name}=={pkg_version}")
         del ragbits_pkg_project["project"]["dependencies"][idx]
         ragbits_pkg_project["project"]["dependencies"].insert(idx, f"{pkg_name}=={pkg_new_version}")
+        _add_updated_dependency_to_changelog("ragbits", pkg_name, pkg_new_version)
 
         if update_version:
             ragbits_old_version = ragbits_pkg_project["project"]["version"]
@@ -131,17 +126,52 @@ def _sync_ragbits_deps(pkg_name: str, pkg_version: str, pkg_new_version: str, up
                 "[green]The ragbits package was successfully updated "
                 f"from {ragbits_old_version} to {ragbits_new_version}.[/green]"
             )
+            _create_changelog_release(pkg_name="ragbits", new_version=ragbits_new_version)
 
-            changelog_path = PACKAGES_DIR / "ragbits" / "CHANGELOG.md"
-            changelog_content = changelog_path.read_text()
-            changelog_content = changelog_content.replace(
-                "## Unreleased",
-                f"## Unreleased\n\n## {ragbits_new_version} ({datetime.today().strftime('%Y-%m-%d')})"
-                f"\n\n### Changed\n\n- {pkg_name} updated to version {pkg_new_version}",
-            )
-            changelog_path.write_text(changelog_content)
+
         (PACKAGES_DIR / "ragbits" / "pyproject.toml").write_text(tomlkit.dumps(ragbits_pkg_project))
 
+
+def _add_updated_dependency_to_changelog(pkg_name, dependency_name: str, new_dependency_version: str) -> None:
+    changelog_path = PACKAGES_DIR / pkg_name / "CHANGELOG.md"
+    changelog_content = changelog_path.read_text()
+
+    # Find the "## Unreleased" section
+    unreleased_match = re.search(r"^## Unreleased\s*$", changelog_content, re.MULTILINE)
+    if unreleased_match:
+        unreleased_index = unreleased_match.end()
+
+        # Find the next section after "## Unreleased"
+        next_section_match = re.search(r"^##\s", changelog_content[unreleased_index:], re.MULTILINE)
+        next_section_index = unreleased_index + next_section_match.start() if next_section_match else len(changelog_content)
+
+        # Check if "### Changed" exists in the "## Unreleased" section
+        changed_match = re.search(r"^### Changed\s*$", changelog_content[unreleased_index:next_section_index], re.MULTILINE)
+        if not changed_match:
+            # If "### Changed" does not exist, create it above any existing sections
+            changelog_content = (
+                changelog_content[:unreleased_index]
+                + f"\n### Changed\n\n- {dependency_name} updated to version v{new_dependency_version}\n"
+                + changelog_content[unreleased_index:]
+            )
+        else:
+            # If "### Changed" exists, append the new entry
+            changed_index = unreleased_index + changed_match.end()
+            changelog_content = (
+                changelog_content[:changed_index]
+                + f"\n- {dependency_name} updated to version v{new_dependency_version}"
+                + changelog_content[changed_index:]
+            )
+
+    changelog_path.write_text(changelog_content)
+
+def _create_changelog_release(pkg_name: str, new_version: str) -> None:
+    changelog_path = PACKAGES_DIR / pkg_name / "CHANGELOG.md"
+    changelog_content = changelog_path.read_text()
+    changelog_content = changelog_content.replace(
+        "## Unreleased", f"## Unreleased\n\n## {new_version} ({datetime.today().strftime('%Y-%m-%d')})"
+    )
+    changelog_path.write_text(changelog_content)
 
 
 def run(pkg_name: Optional[str] = typer.Argument(None), update_type: Optional[str] = typer.Argument(None)) -> None:
@@ -196,6 +226,8 @@ def run(pkg_name: Optional[str] = typer.Argument(None), update_type: Optional[st
                     dep for dep in pkg_pyproject["project"]["dependencies"] if "ragbits-core" not in dep
                 ]
                 pkg_pyproject["project"]["dependencies"].append(f"ragbits-core=={new_version}")
+                if pkg != "ragbits":
+                    _add_updated_dependency_to_changelog(pkg, pkg_name, new_version)
                 _update_pkg_version(pkg, pkg_pyproject, update_type=casted_update_type)
 
         else:
