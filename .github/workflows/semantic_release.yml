@@ -60,7 +60,7 @@ jobs:
           git add .
           git commit -m "$COMMIT_MESSAGE"
           git push -u origin HEAD
-          gh pr create -B main --title $COMMIT_MESSAGE \
+          gh pr create -B main --title "$COMMIT_MESSAGE" \
           --body 'Update ${{ github.event.inputs.packageName }} version from ${{ steps.packages_update.outputs.old_version }} to ${{ steps.packages_update.outputs.new_version }}'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
