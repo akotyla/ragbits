@@ -56,7 +56,7 @@ jobs:
 
       - name: Create PR with updated packages
         run: |
-          COMMIT_MESSAGE="release(${{ github.event.inputs.packageName }}): update to v${{ steps.packages_update.outputs.new_version }}"
+          COMMIT_MESSAGE='release(${{ github.event.inputs.packageName }}): update to v${{ steps.packages_update.outputs.new_version }}'
           git add .
           git commit -m $COMMIT_MESSAGE
           git push -u origin HEAD
