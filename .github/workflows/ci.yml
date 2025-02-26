@@ -6,14 +6,15 @@ on:
   pull_request:
 
 jobs:
-  check:
+  pr-title-checker:
+    name: Check PR title
     runs-on: ubuntu-latest
+    permissions:
+      statuses: write
     steps:
-      - uses: Slashgear/action-check-pr-title@v4.3.0
-        with:
-          regexp: "(feat|fix|docs): .++" # Regex the title should match.
-          helpMessage: "Example: 'feat: example of title'"
-
+      - uses: aslafy-z/conventional-pr-title-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   lints:
     name: Run linters
     runs-on: ubuntu-latest
