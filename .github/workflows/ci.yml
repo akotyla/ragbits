@@ -15,19 +15,39 @@ jobs:
         with:
           fetch-depth: 2  # Fetch last two commits for diff comparison
 
-      - name: Check if changelog was updated under 'Unreleased'
+      - name: Get changed files
+        id: changed-files
         run: |
-          if ! grep -q '## Unreleased' CHANGELOG.md; then
-            echo "Missing '## Unreleased' section in CHANGELOG.md"
-            exit 1
+          echo "FILES=$(git diff --name-only origin/${{ github.base_ref }})" >> $GITHUB_ENV
+
+      - name: Check for changelog updates
+        run: |
+          CHANGED_PACKAGES=$(echo "$FILES" | grep -oE '^packages/[^/]+/' | sort -u | cut -d '/' -f2)
+          if [ -z "$CHANGED_PACKAGES" ]; then
+            echo "No package changes detected."
+            exit 0
           fi
 
-          if ! git diff --unified=0 origin/${{ github.base_ref }} -- CHANGELOG.md | awk '/## Unreleased/,/^## /' | grep -q '^\+'; then
-            echo "No updates found in '## Unreleased' section of CHANGELOG.md"
-            exit 1
-          fi
+          for PACKAGE in $CHANGED_PACKAGES; do
+            CHANGELOG="packages/$PACKAGE/CHANGELOG.md"
 
-          echo "Changelog update found in '## Unreleased' section."
+            if [ ! -f "$CHANGELOG" ]; then
+              echo "No CHANGELOG.md found for package: $PACKAGE"
+              exit 1
+            fi
+
+            if ! grep -q '## Unreleased' "$CHANGELOG"; then
+              echo "Missing '## Unreleased' section in $CHANGELOG"
+              exit 1
+            fi
+
+            if ! git diff --unified=0 origin/${{ github.base_ref }} -- "$CHANGELOG" | awk '/## Unreleased/,/^## /' | grep -q '^\+'; then
+              echo "No updates found in '## Unreleased' section of $CHANGELOG"
+              exit 1
+            fi
+          done
+
+          echo "All modified packages have changelog updates."
 
   pr-title-checker:
     name: Validate PR title
