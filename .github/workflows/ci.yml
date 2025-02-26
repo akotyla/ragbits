@@ -21,11 +21,13 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          echo "FILES=$(git diff --name-only origin/main)" >> $GITHUB_ENV
+          echo "files=$(git diff --name-only origin/main | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
 
       - name: Check for changelog updates
         run: |
-          CHANGED_PACKAGES=$(echo "$FILES" | grep -oE '^packages/[^/]+/' | sort -u | cut -d '/' -f2)
+          CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
+          CHANGED_PACKAGES=$(echo "$CHANGED_FILES" | grep -oE '^packages/[^/]+/' | sort -u | cut -d '/' -f2)
+
           if [ -z "$CHANGED_PACKAGES" ]; then
             echo "No package changes detected."
             exit 0
@@ -44,7 +46,7 @@ jobs:
               exit 1
             fi
 
-            if ! git diff --unified=0 origin/${{ github.base_ref }} -- "$CHANGELOG" | awk '/## Unreleased/,/^## /' | grep -q '^\+'; then
+            if ! git diff --unified=0 origin/main -- "$CHANGELOG" | awk '/## Unreleased/,/^## /' | grep -q '^\+'; then
               echo "No updates found in '## Unreleased' section of $CHANGELOG"
               exit 1
             fi
