@@ -9,12 +9,11 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: thehanimo/pr-title-checker@v1.4.3
+      - uses: Slashgear/action-check-pr-title@v4.3.0
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          pass_on_octokit_error: false
-          configuration_path: .github/pr-title-checker-config.json
-          
+          regexp: "(feat|fix|docs): .++" # Regex the title should match.
+          helpMessage: "Example: 'feat: example of title'"
+
   lints:
     name: Run linters
     runs-on: ubuntu-latest
