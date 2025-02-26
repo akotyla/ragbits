@@ -26,7 +26,7 @@ jobs:
       - name: Check for changelog updates
         run: |
           CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
-          CHANGED_PACKAGES=$(echo "$CHANGED_FILES" | grep -oE '^packages/[^/]+/' | sort -u | cut -d '/' -f2)
+          CHANGED_PACKAGES=$(echo "$CHANGED_FILES" | grep -oE '^packages/[^/]+' | sort -u | cut -d '/' -f2)
 
           if [ -z "$CHANGED_PACKAGES" ]; then
             echo "No package changes detected."
