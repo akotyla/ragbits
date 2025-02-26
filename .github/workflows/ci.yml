@@ -13,12 +13,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Fetch last two commits for diff comparison
+          fetch-depth: 0  # Fetch full history to compare changes
+
+      - name: Fetch main branch
+        run: git fetch origin main --depth=1
 
       - name: Get changed files
         id: changed-files
         run: |
-          echo "FILES=$(git diff --name-only origin/${{ github.base_ref }})" >> $GITHUB_ENV
+          echo "FILES=$(git diff --name-only origin/main)" >> $GITHUB_ENV
 
       - name: Check for changelog updates
         run: |
