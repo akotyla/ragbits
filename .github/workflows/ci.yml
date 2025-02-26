@@ -38,22 +38,24 @@ jobs:
             CHANGELOG="packages/$PACKAGE/CHANGELOG.md"
 
             if [ ! -f "$CHANGELOG" ]; then
-              echo "No CHANGELOG.md found for package: $PACKAGE"
+              echo "❌ No CHANGELOG.md found for package: $PACKAGE"
               exit 1
             fi
 
+            # Ensure the '## Unreleased' section exists
             if ! grep -q '## Unreleased' "$CHANGELOG"; then
-              echo "Missing '## Unreleased' section in $CHANGELOG"
+              echo "❌ Missing '## Unreleased' section in $CHANGELOG"
               exit 1
             fi
 
+            # Check if there are updates in the '## Unreleased' section
             if ! git diff --unified=0 origin/main -- "$CHANGELOG" | awk '/## Unreleased/,/^## /' | grep -q '^\+'; then
-              echo "No updates found in '## Unreleased' section of $CHANGELOG"
+              echo "❌ No updates found in '## Unreleased' section of $CHANGELOG"
               exit 1
             fi
           done
 
-          echo "All modified packages have changelog updates."
+          echo "✅ All modified packages have changelog updates."
 
   pr-title-checker:
     name: Validate PR title
