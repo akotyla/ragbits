@@ -17,8 +17,7 @@ jobs:
 
       - name: Verify changelog updates  
         run: |
-          chmod +x ./check_changelog_update.sh
-          ./check_changelog_update.sh
+          ./scripts/check_changelog_update.sh
 
 
 
