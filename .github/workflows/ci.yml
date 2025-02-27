@@ -37,7 +37,7 @@ jobs:
             CHANGELOG="packages/$PACKAGE/CHANGELOG.md"
 
             # Check if there are updates in the '## Unreleased' section
-            if ! diff -u <(git show origin/main:$CHANGELOG | grep -Pzo '(?s)(## Unreleased.*?)(?=\n## |\Z)' | tr -d '\0') <(grep -Pzo '(?s)(## Unreleased.*?)(?=\n## |\Z)' $CHANGELOG | tr -d '\0'); then 
+            if ! diff -u <(git show origin/main:$CHANGELOG | grep -Pzo '(?s)(## Unreleased.*?)(?=\n## |\Z)' | tr -d '\0') <(grep -Pzo '(?s)(## Unreleased.*?)(?=\n## |\Z)' $CHANGELOG | tr -d '\0') | grep -q '^\+'; then 
               echo "No updates"
               exit 1
             fi
