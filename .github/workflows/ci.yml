@@ -6,6 +6,28 @@ on:
   pull_request:
 
 jobs:
+  changelog-check:
+    name: Check Changelog Update  
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify changelog updates  
+        run: |
+          ./scripts/check_changelog_update.sh
+
+
+
+  pr-title-checker:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   lints:
     name: Run linters
     runs-on: ubuntu-latest
