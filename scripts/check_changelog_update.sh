@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Exit on error
-set -e
-
-# Fetch main branch and identify changed files
 echo "Fetching main branch..."
 git fetch origin main --depth=1
 
@@ -15,7 +11,6 @@ if [ -z "$CHANGED_FILES" ]; then
   exit 0
 fi
 
-# Identify packages with changes
 CHANGED_PACKAGES=$(echo "$CHANGED_FILES" | grep -oE 'packages/[^/]+' | cut -d '/' -f2 | sort -u)
 
 if [ -z "$CHANGED_PACKAGES" ]; then
@@ -25,12 +20,10 @@ fi
 
 echo "Found changes in the following packages: $CHANGED_PACKAGES"
 
-# Check each package changelog
 for PACKAGE in $CHANGED_PACKAGES; do
   CHANGELOG="packages/$PACKAGE/CHANGELOG.md"
   echo "Checking changelog for package: $PACKAGE"
 
-  # Check if there are updates in the '## Unreleased' section
   if ! diff -u <(git show origin/main:$CHANGELOG | grep -Pzo '(?s)(## Unreleased.*?)(?=\n## |\Z)' | tr -d '\0') <(grep -Pzo '(?s)(## Unreleased.*?)(?=\n## |\Z)' $CHANGELOG | tr -d '\0') | grep -q '^\+'; then 
     echo "No updates detected in changelog for package $PACKAGE. Please add an entry under '## Unreleased'."
     exit 1
