@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Aaaaa.
+aaaaa
 
 ### Added
 
